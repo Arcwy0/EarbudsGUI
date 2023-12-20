@@ -8,6 +8,7 @@ import scipy
 from scipy.signal import butter, lfilter
 from scipy.signal import freqz
 import matplotlib.pyplot as plt
+from scipy.fft import fft, fftfreq
 
 def filter_wrapper(func, df, **kwargs):
     #Should be edited
@@ -62,27 +63,22 @@ def norm_standard_window(df: pd.DataFrame, window_size: int = 500) -> pd.DataFra
     return res_df
 
 def seq_convolution(
-                    df: pd.DataFrame, 
-                    feature_cols: list,
+                    df: pd.DataFrame,
                     kernel_size = 10,
                     kernel_type = "mean",
                     step_size = 5,
                     verbose: str = False
                     ) -> pd.DataFrame:
 
-    static_cols = [col for col in df.columns if col not in feature_cols]
     index_bitmap = np.arange(len(df)) % step_size == 1
     
     if kernel_type == "max":
-        res_df =  df[feature_cols].rolling(window=kernel_size).max()
+        res_df =  df.rolling(window=kernel_size).max()
         
     elif kernel_type == "mean":
-        res_df =  df[feature_cols].rolling(window=kernel_size).mean()
+        res_df =  df.rolling(window=kernel_size).mean()
         
     res_df = res_df[index_bitmap].dropna().reset_index(drop=True)
-    
-    for col in static_cols:
-        res_df[col] = df[str(col)].iloc[0]
         
     if verbose:
         print(f"Data points reduced by: {len(df) - len(res_df)} or {round(100 * (len(df) - len(res_df)) / len(df), 3)} %")
@@ -90,18 +86,19 @@ def seq_convolution(
     return res_df
 
 def moving_average(
-                    df: pd.DataFrame, 
-                    feature_cols: list,
+                    df: pd.DataFrame,
                     kernel_size = 50
                     ) -> pd.DataFrame:
 
-    res_df =  df[feature_cols].rolling(window=kernel_size).mean()
+    res_df =  df.rolling(window=kernel_size).mean()
     return res_df.dropna().reset_index(drop=True)
 
 #TODO: Apply other transformations
 def df_full_transform(df: pd.DataFrame):
     df = edit_columns(df)
     df = norm_standard_window(df)
+    df = seq_convolution(df)
+    df = moving_average(df)
     return df
 
 #Signal processing
@@ -168,14 +165,13 @@ def passband_filter(
 
 def passband_filter_wrapper(
                             df, 
-                            feature_cols: list, 
                             lowcut: float = 1.0, # Min frequency
                             highcut: float = 100.0, # Max frequency
                             fs: float = 250.0, # Sampling rate
                             plot: bool = False 
                             ) -> np.array:
     
-    for col in feature_cols:
+    for col in df:
         df[col] = passband_filter(
                                 df[col], 
                                 lowcut, # Min frequency
@@ -184,3 +180,18 @@ def passband_filter_wrapper(
                                 plot
                                 )
     return df
+
+def do_fft(
+            signal: np.array,
+            sample_rate = 250
+            ) -> None:
+    # Number of sample points
+    N = len(signal)
+    # sample spacing
+    T = 1.0/sample_rate
+    x = np.linspace(0.0, N * T, len(signal), endpoint=False)
+    y = signal
+    yf = fft(y)
+    xf = fftfreq(N, T)[:N//2]
+    yfamp = 2.0/N * np.abs(yf)
+    return xf,yfamp
