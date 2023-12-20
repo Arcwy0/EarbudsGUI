@@ -2,10 +2,10 @@
 
 ### Prerequisites
 
-Dear PyGUI, pandas, numpy, sklearn
+Dear PyGUI, pandas, numpy, sklearn, scipy
 
 ```
-pip install dearpygui pandas numpy sklearn tqdm
+pip install dearpygui pandas numpy scikit-learn tqdm scipy
 ```
 
 ### Plotting from file
