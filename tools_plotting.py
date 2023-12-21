@@ -194,4 +194,5 @@ def do_fft(
     yf = fft(y)
     xf = fftfreq(N, T)[:N//2]
     yfamp = 2.0/N * np.abs(yf[0:N//2])
+    yfamp = 2.0/N * np.abs(yf[:N//2])
     return xf,yfamp
