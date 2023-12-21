@@ -46,25 +46,32 @@ def update_fft_plot(step,data):
 
 
 
-
-data = load_data("OpenBCI-RAW-con1_ec.txt")
-with dpg.window(label="EEG DATA", width=1100, height=800):
-    for i in range(NUM_CHANNELS):
-        channel_data = data[:,i].tolist()
-        x_values=list(range(len(channel_data)))
-        with dpg.plot(width=500,height=80,tag=f"plot{i}"):
-            dpg.add_plot_axis(dpg.mvXAxis, parent=f"plot{i}",tag=f"xaxis{i}", time=True, no_tick_labels=True)
-            dpg.add_plot_axis(dpg.mvYAxis, parent=f"plot{i}",tag=f"yaxis{i}")
-            dpg.set_axis_limits(dpg.last_item(), -0.5, 0.5)
-            # dpg.add_line_series(x_values,channel_data,  tag=f'line{i}', parent=f"yaxis{i}")
-            dpg.add_line_series([],[],  tag=f'line{i}', parent=f"yaxis{i}")
-    with dpg.plot(width=500,height=500,tag='fft',pos=(525,30)):
-        dpg.add_plot_axis(dpg.mvXAxis,label='Frequency',tag='x_fft')
-        dpg.set_axis_limits(dpg.last_item(),0,50)
-        dpg.add_plot_axis(dpg.mvYAxis,label='Amplitude',tag='y_fft')
-        dpg.set_axis_limits(dpg.last_item(),0,0.3)
-        dpg.add_line_series([],[],  tag=f'line_fft', parent=f"y_fft")
-    dpg.add_checkbox(label="Start exp", tag="start_exp", default_value=False)
+def plot_update():
+    data = load_data("OpenBCI-RAW-con1_ec.txt")
+    with dpg.window(label="EEG DATA", width=1100, height=800):
+        for i in range(NUM_CHANNELS):
+            channel_data = data[:,i].tolist()
+            x_values=list(range(len(channel_data)))
+            with dpg.plot(width=500,height=80,tag=f"plot{i}"):
+                dpg.add_plot_axis(dpg.mvXAxis, parent=f"plot{i}",tag=f"xaxis{i}", time=True, no_tick_labels=True)
+                dpg.add_plot_axis(dpg.mvYAxis, parent=f"plot{i}",tag=f"yaxis{i}")
+                dpg.set_axis_limits(dpg.last_item(), -0.5, 0.5)
+                # dpg.add_line_series(x_values,channel_data,  tag=f'line{i}', parent=f"yaxis{i}")
+                dpg.add_line_series([],[],  tag=f'line{i}', parent=f"yaxis{i}")
+        with dpg.plot(width=500,height=500,tag='fft',pos=(525,30)):
+            dpg.add_plot_axis(dpg.mvXAxis,label='Frequency',tag='x_fft')
+            dpg.set_axis_limits(dpg.last_item(),0,50)
+            dpg.add_plot_axis(dpg.mvYAxis,label='Amplitude',tag='y_fft')
+            dpg.set_axis_limits(dpg.last_item(),0,0.3)
+            dpg.add_line_series([],[],  tag=f'line_fft', parent=f"y_fft")
+        dpg.add_checkbox(label="Start exp", tag="start_exp", default_value=False)
+        while dpg.is_dearpygui_running() and step < len(data):
+            if dpg.get_value('start_exp'):
+                update_channel_plots(step,data)
+                update_fft_plot(step,data)
+                step+=1
+            dpg.render_dearpygui_frame()
+    return True
 
 dpg.create_viewport(title='EarBuds', width=1100, height=800)
 dpg.setup_dearpygui()
@@ -73,11 +80,6 @@ step = 0
 
 
 
-while dpg.is_dearpygui_running() and step < len(data):
-    if dpg.get_value('start_exp'):
-        update_channel_plots(step,data)
-        update_fft_plot(step,data)
-        step+=1
-    dpg.render_dearpygui_frame()
+
 
 dpg.destroy_context()
