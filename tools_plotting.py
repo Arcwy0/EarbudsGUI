@@ -193,5 +193,5 @@ def do_fft(
     y = signal
     yf = fft(y)
     xf = fftfreq(N, T)[:N//2]
-    yfamp = 2.0/N * np.abs(yf)
+    yfamp = 2.0/N * np.abs(yf[0:N//2])
     return xf,yfamp
